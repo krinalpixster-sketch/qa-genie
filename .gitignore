@@ -1,0 +1,25 @@
+# Environment variables & secrets
+.env
+*.env
+
+# Python runtime & Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS & IDE metadata
+.DS_Store
+.vscode/
+.idea/
+
+# Local SQLite Database & exports
+qa_genie.db
+*.pdf
+*.xlsx
+
+# Local Mac command launcher
+Start_QA_Genie.command

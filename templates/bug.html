@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Genie - Bug Report Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">🤖 <strong>QA Genie</strong></div>
+        <nav class="nav-links">
+            <a href="/">🏠 Dashboard</a>
+            <a href="/history">📋 History</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="header-section">
+        <h1>🐛 Bug Report Generator</h1>
+        <p class="subtitle">Generate detailed defect tickets with steps to reproduce, actual/expected behavior, and workarounds</p>
+    </div>
+
+    <div class="card form-card">
+        <form action="/generate_bug" method="POST">
+            <label>Feature / Component Name</label>
+            <input type="text" name="feature" placeholder="e.g. Checkout Billing Address Form" required>
+
+            <label>Bug Description / Defect Details</label>
+            <textarea name="description" rows="5" placeholder="Describe the error, error code, or unexpected behavior observed..." required></textarea>
+
+            <div class="action-buttons" style="justify-content: flex-start;">
+                <button type="submit" class="btn btn-primary">🐛 Generate Bug Report</button>
+                <a href="/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

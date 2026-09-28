@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Genie - View {{ report.type }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">🤖 <strong>QA Genie</strong></div>
+        <nav class="nav-links">
+            <a href="/">🏠 Dashboard</a>
+            <a href="/history">📋 History</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="result-header">
+        <span class="badge badge-large badge-{{ report.type|lower|replace(' ', '-') }}">{{ report.type }}</span>
+        <h1>{{ report.feature }}</h1>
+        <p class="subtitle">{{ report.description }}</p>
+        <p class="timestamp">Created on {{ report.created_at }}</p>
+    </div>
+
+    <div class="action-buttons">
+        <form action="/regenerate" method="POST" style="display:inline;">
+            <input type="hidden" name="report_id" value="{{ report.id }}">
+            <input type="hidden" name="report_type" value="{{ report.type }}">
+            <input type="hidden" name="feature" value="{{ report.feature }}">
+            <input type="hidden" name="description" value="{{ report.description }}">
+            <input type="hidden" name="previous_content" value="{{ report.content }}">
+            <button type="submit" class="btn btn-primary">🔄 Regenerate</button>
+        </form>
+
+        <form action="/download_pdf" method="POST" style="display:inline;">
+            <input type="hidden" name="feature" value="{{ report.feature }}">
+            <input type="hidden" name="description" value="{{ report.description }}">
+            <input type="hidden" name="content" value="{{ report.content }}">
+            <button type="submit" class="btn btn-primary">📄 Download PDF</button>
+        </form>
+
+        <form action="/download_excel" method="POST" style="display:inline;">
+            <input type="hidden" name="feature" value="{{ report.feature }}">
+            <input type="hidden" name="description" value="{{ report.description }}">
+            <input type="hidden" name="content" value="{{ report.content }}">
+            <button type="submit" class="btn btn-primary">📊 Download Excel</button>
+        </form>
+
+        <a href="/delete/{{ report.id }}" class="btn btn-danger">🗑️ Delete</a>
+        <a href="/history" class="btn btn-secondary">⬅️ Back to History</a>
+    </div>
+
+    <div class="ai-result">
+        {{ content_html|safe }}
+    </div>
+
+</div>
+
+</body>
+</html>

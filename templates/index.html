@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Genie - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">🤖 <strong>QA Genie</strong></div>
+        <nav class="nav-links">
+            <a href="/" class="active">🏠 Dashboard</a>
+            <a href="/history">📋 History</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="header-section">
+        <h1>🤖 QA Genie Dashboard</h1>
+        <p class="subtitle">AI-Powered Quality Assurance Productivity Suite</p>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">{{ total_reports }}</div>
+            <div class="stat-label">Total Reports</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📄</div>
+            <div class="stat-number">{{ test_cases_count }}</div>
+            <div class="stat-label">Test Cases</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-number">{{ scenarios_count }}</div>
+            <div class="stat-label">Test Scenarios</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🐛</div>
+            <div class="stat-number">{{ bugs_count }}</div>
+            <div class="stat-label">Bug Reports</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-number">{{ checklists_count }}</div>
+            <div class="stat-label">QA Checklists</div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-box-card">
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="q" placeholder="🔍 Search saved reports by feature, description, or content..." required>
+            <button type="submit" class="btn btn-primary">Search History</button>
+        </form>
+    </div>
+
+    <!-- Dashboard Module Cards Section -->
+    <h2 class="section-title">⚡ QA Modules & Generators</h2>
+    <div class="card-container">
+
+        <!-- 1. Test Case Generator Card -->
+        <div class="card">
+            <h2>📄 Test Case Generator</h2>
+            <p>Generate functional, negative, edge case & regression test cases instantly with AI.</p>
+            <form action="/generate" method="POST">
+                <label>Feature Name</label>
+                <input type="text" name="feature" placeholder="e.g. User Authentication" required>
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Describe the feature details..." required></textarea>
+                <button type="submit" class="btn btn-primary btn-block">Generate Test Cases</button>
+            </form>
+        </div>
+
+        <!-- 2. Test Scenario Generator Card -->
+        <div class="card">
+            <h2>🎯 Test Scenario Generator</h2>
+            <p>Generate realistic, single-sentence test scenarios covering happy path, negative flow, and edge cases.</p>
+            <div style="margin-bottom: 10px;">
+                <a href="/scenario" class="btn btn-secondary btn-sm">Open Dedicated Page ➡️</a>
+            </div>
+            <form action="/generate_scenario" method="POST">
+                <label>Feature Name</label>
+                <input type="text" name="feature" placeholder="e.g. Payment Gateway" required>
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Describe scenario details..." required></textarea>
+                <button type="submit" class="btn btn-primary btn-block">Generate Scenarios</button>
+            </form>
+        </div>
+
+        <!-- 3. Bug Report Generator Card -->
+        <div class="card">
+            <h2>🐛 Bug Report Generator</h2>
+            <p>Generate detailed bug tickets with steps to reproduce, actual/expected result, and workaround.</p>
+            <div style="margin-bottom: 10px;">
+                <a href="/bug" class="btn btn-secondary btn-sm">Open Dedicated Page ➡️</a>
+            </div>
+            <form action="/generate_bug" method="POST">
+                <label>Feature / Module</label>
+                <input type="text" name="feature" placeholder="e.g. Checkout Form" required>
+                <label>Bug Description / Error Details</label>
+                <textarea name="description" rows="3" placeholder="Describe the bug behavior..." required></textarea>
+                <button type="submit" class="btn btn-primary btn-block">Generate Bug Report</button>
+            </form>
+        </div>
+
+        <!-- 4. QA Checklist Generator Card -->
+        <div class="card">
+            <h2>✅ QA Checklist Generator</h2>
+            <p>Generate comprehensive QA testing checklists covering functional, security, UI, and performance.</p>
+            <div style="margin-bottom: 10px;">
+                <a href="/checklist" class="btn btn-secondary btn-sm">Open Dedicated Page ➡️</a>
+            </div>
+            <form action="/generate_checklist" method="POST">
+                <label>Feature Name</label>
+                <input type="text" name="feature" placeholder="e.g. File Upload" required>
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Describe checklist context..." required></textarea>
+                <button type="submit" class="btn btn-primary btn-block">Generate Checklist</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Recent Reports Preview -->
+    {% if recent_reports %}
+    <h2 class="section-title">🕒 Recent Activity</h2>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Feature</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in recent_reports %}
+                <tr>
+                    <td><span class="badge badge-{{ r.type|lower|replace(' ', '-') }}">{{ r.type }}</span></td>
+                    <td><strong>{{ r.feature }}</strong></td>
+                    <td>{{ r.description|truncate(60) }}</td>
+                    <td>{{ r.created_at }}</td>
+                    <td>
+                        <a href="/view/{{ r.id }}" class="btn btn-secondary btn-sm">👁️ View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

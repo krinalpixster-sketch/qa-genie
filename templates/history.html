@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Genie - History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">🤖 <strong>QA Genie</strong></div>
+        <nav class="nav-links">
+            <a href="/">🏠 Dashboard</a>
+            <a href="/history" class="active">📋 History</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="header-section">
+        <h1>📋 Saved Reports History</h1>
+        <p class="subtitle">Search, view, delete, and export previously generated QA artifacts</p>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="filter-card">
+        <form action="/history" method="GET" class="filter-form">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by feature, keyword or description..." class="input-search">
+
+            <select name="type" class="select-filter">
+                <option value="">All Report Types</option>
+                <option value="Test Case" {% if type_filter == 'Test Case' %}selected{% endif %}>Test Case</option>
+                <option value="Test Scenario" {% if type_filter == 'Test Scenario' %}selected{% endif %}>Test Scenario</option>
+                <option value="Bug Report" {% if type_filter == 'Bug Report' %}selected{% endif %}>Bug Report</option>
+                <option value="QA Checklist" {% if type_filter == 'QA Checklist' %}selected{% endif %}>QA Checklist</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% if query or type_filter %}
+                <a href="/history" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Reports Table or Empty State -->
+    {% if reports %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Feature</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td><span class="badge badge-{{ r.type|lower|replace(' ', '-') }}">{{ r.type }}</span></td>
+                    <td><strong>{{ r.feature }}</strong></td>
+                    <td>{{ r.description|truncate(80) }}</td>
+                    <td>{{ r.created_at }}</td>
+                    <td class="action-cell">
+                        <a href="/view/{{ r.id }}" class="btn btn-secondary btn-sm">👁️ View</a>
+                        <a href="/delete/{{ r.id }}" class="btn btn-danger btn-sm">🗑️ Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h2>No Reports Found</h2>
+        <p>No QA reports found matching your criteria. Start by generating a new test case, scenario, bug report, or checklist!</p>
+        <a href="/" class="btn btn-primary">⚡ Go to Dashboard</a>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

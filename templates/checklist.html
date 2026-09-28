@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Genie - QA Checklist Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">🤖 <strong>QA Genie</strong></div>
+        <nav class="nav-links">
+            <a href="/">🏠 Dashboard</a>
+            <a href="/history">📋 History</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="header-section">
+        <h1>✅ QA Checklist Generator</h1>
+        <p class="subtitle">Generate comprehensive testing checklists covering functional, security, UI, and performance checkpoints</p>
+    </div>
+
+    <div class="card form-card">
+        <form action="/generate_checklist" method="POST">
+            <label>Feature Name</label>
+            <input type="text" name="feature" placeholder="e.g. File Upload & Document Management" required>
+
+            <label>Description & Scope</label>
+            <textarea name="description" rows="5" placeholder="Describe the feature guidelines, platforms, and security boundaries..." required></textarea>
+
+            <div class="action-buttons" style="justify-content: flex-start;">
+                <button type="submit" class="btn btn-primary">✅ Generate QA Checklist</button>
+                <a href="/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

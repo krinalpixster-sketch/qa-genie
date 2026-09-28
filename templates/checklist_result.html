@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Genie - QA Checklist Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="nav-container">
+        <div class="logo">🤖 <strong>QA Genie</strong></div>
+        <nav class="nav-links">
+            <a href="/">🏠 Dashboard</a>
+            <a href="/history">📋 History</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="result-header">
+        <span class="badge badge-large badge-qa-checklist">QA Checklist</span>
+        <h1>Generated Checklist: {{ feature }}</h1>
+        <p class="subtitle">{{ description }}</p>
+    </div>
+
+    <div class="action-buttons">
+        <form action="/regenerate" method="POST" style="display:inline;">
+            <input type="hidden" name="report_id" value="{{ report_id }}">
+            <input type="hidden" name="report_type" value="QA Checklist">
+            <input type="hidden" name="feature" value="{{ feature }}">
+            <input type="hidden" name="description" value="{{ description }}">
+            <input type="hidden" name="previous_content" value="{{ content }}">
+            <button type="submit" class="btn btn-primary">🔄 Regenerate</button>
+        </form>
+
+        <form action="/download_pdf" method="POST" style="display:inline;">
+            <input type="hidden" name="feature" value="{{ feature }}">
+            <input type="hidden" name="description" value="{{ description }}">
+            <input type="hidden" name="content" value="{{ content }}">
+            <button type="submit" class="btn btn-primary">📄 Download PDF</button>
+        </form>
+
+        <form action="/download_excel" method="POST" style="display:inline;">
+            <input type="hidden" name="feature" value="{{ feature }}">
+            <input type="hidden" name="description" value="{{ description }}">
+            <input type="hidden" name="content" value="{{ content }}">
+            <button type="submit" class="btn btn-primary">📊 Download Excel</button>
+        </form>
+
+        <a href="/delete/{{ report_id }}" class="btn btn-danger">🗑️ Delete</a>
+        <a href="/history" class="btn btn-secondary">📋 View in History</a>
+        <a href="/checklist" class="btn btn-secondary">✅ Generate Another Checklist</a>
+    </div>
+
+    <div class="ai-result">
+        {{ ai_response|safe }}
+    </div>
+
+</div>
+
+</body>
+</html>
