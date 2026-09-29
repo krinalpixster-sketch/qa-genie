@@ -16,8 +16,7 @@ __pycache__/
 .vscode/
 .idea/
 
-# Local SQLite Database & exports
-qa_genie.db
+# Local exports
 *.pdf
 *.xlsx
 
