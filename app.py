@@ -6,6 +6,7 @@ from openpyxl import Workbook
 from google import genai
 from dotenv import load_dotenv
 
+from datetime import datetime, timezone, timedelta
 import io
 import os
 import sqlite3
@@ -15,6 +16,12 @@ import difflib
 import random
 
 load_dotenv()
+
+# Real Indian Standard Time (IST, UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_current_timestamp():
+    return datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
 
 # Load API key from GEMINI_API_KEY env variable
 api_key = os.getenv("GEMINI_API_KEY")
@@ -1073,8 +1080,8 @@ def generate():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
-        ("Test Case", feature, description, content)
+        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, ?)",
+        ("Test Case", feature, description, content, get_current_timestamp())
     )
     report_id = cursor.lastrowid
     conn.commit()
@@ -1103,8 +1110,8 @@ def generate_scenario():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
-        ("Test Scenario", feature, description, content)
+        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, ?)",
+        ("Test Scenario", feature, description, content, get_current_timestamp())
     )
     report_id = cursor.lastrowid
     conn.commit()
@@ -1133,8 +1140,8 @@ def generate_bug():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
-        ("Bug Report", feature, description, content)
+        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, ?)",
+        ("Bug Report", feature, description, content, get_current_timestamp())
     )
     report_id = cursor.lastrowid
     conn.commit()
@@ -1163,8 +1170,8 @@ def generate_checklist():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
-        ("QA Checklist", feature, description, content)
+        "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, ?)",
+        ("QA Checklist", feature, description, content, get_current_timestamp())
     )
     report_id = cursor.lastrowid
     conn.commit()
@@ -1219,10 +1226,11 @@ def regenerate():
 
     # Update existing entry & set real local timestamp
     try:
+        current_ts = get_current_timestamp()
         if report_id and str(report_id).isdigit():
             cursor.execute(
-                "UPDATE reports SET content = ?, created_at = datetime('now', 'localtime') WHERE id = ?",
-                (new_content, report_id)
+                "UPDATE reports SET content = ?, created_at = ? WHERE id = ?",
+                (new_content, current_ts, report_id)
             )
         else:
             cursor.execute(
@@ -1233,13 +1241,13 @@ def regenerate():
             if row:
                 report_id = row[0]
                 cursor.execute(
-                    "UPDATE reports SET content = ?, created_at = datetime('now', 'localtime') WHERE id = ?",
-                    (new_content, report_id)
+                    "UPDATE reports SET content = ?, created_at = ? WHERE id = ?",
+                    (new_content, current_ts, report_id)
                 )
             else:
                 cursor.execute(
-                    "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
-                    (report_type, feature, description, new_content)
+                    "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (report_type, feature, description, new_content, current_ts)
                 )
                 report_id = cursor.lastrowid
 
