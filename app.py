@@ -1334,7 +1334,7 @@ def download_pdf():
     styles = getSampleStyleSheet()
     story = []
 
-    story.append(Paragraph("<b>QA Genie - Quality Assurance Report</b>", styles["Title"]))
+    story.append(Paragraph("<b>QA Productivity Tool - Quality Assurance Report</b>", styles["Title"]))
     story.append(Spacer(1, 12))
     story.append(Paragraph(f"<b>Feature:</b> {feature}", styles["Heading2"]))
     story.append(Paragraph(f"<b>Description:</b> {description}", styles["BodyText"]))
@@ -1377,9 +1377,9 @@ def download_excel():
 
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = "QA Genie Report"
+    sheet.title = "QA Productivity Tool Report"
 
-    sheet.append(["QA Genie - Quality Assurance Report"])
+    sheet.append(["QA Productivity Tool - Quality Assurance Report"])
     sheet.append(["Feature", feature])
     sheet.append(["Description", description])
     sheet.append([])
