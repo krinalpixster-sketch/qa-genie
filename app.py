@@ -30,24 +30,39 @@ DATABASE = os.path.join(os.path.dirname(__file__), "qa_genie.db")
 # Database Setup
 # -----------------------------
 def get_db():
-    conn = sqlite3.connect(DATABASE)
+    db_path = DATABASE
+    if os.environ.get("VERCEL") or not os.access(os.path.dirname(DATABASE), os.W_OK):
+        tmp_db = os.path.join("/tmp", "qa_genie.db")
+        if not os.path.exists(tmp_db) and os.path.exists(DATABASE):
+            import shutil
+            try:
+                shutil.copy2(DATABASE, tmp_db)
+            except Exception as e:
+                print("Error copying db to /tmp:", e)
+        if os.path.exists(tmp_db):
+            db_path = tmp_db
+
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    with get_db() as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS reports (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT NOT NULL,
-                feature TEXT NOT NULL,
-                description TEXT NOT NULL,
-                content TEXT,
-                created_at TIMESTAMP DEFAULT (datetime('now', 'localtime'))
-            )
-        ''')
-        conn.commit()
+    try:
+        with get_db() as conn:
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS reports (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    type TEXT NOT NULL,
+                    feature TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    content TEXT,
+                    created_at TIMESTAMP DEFAULT (datetime('now', 'localtime'))
+                )
+            ''')
+            conn.commit()
+    except Exception as e:
+        print("Init DB warning:", e)
 
 
 init_db()
@@ -1184,14 +1199,17 @@ def regenerate():
 
     # Guarantee Feature Name & Description match existing report in DB
     if report_id and str(report_id).isdigit():
-        cursor.execute("SELECT * FROM reports WHERE id = ?", (report_id,))
-        existing = cursor.fetchone()
-        if existing:
-            feature = existing["feature"]
-            description = existing["description"]
-            report_type = existing["type"]
-            if not previous_content:
-                previous_content = existing["content"] or ""
+        try:
+            cursor.execute("SELECT * FROM reports WHERE id = ?", (report_id,))
+            existing = cursor.fetchone()
+            if existing:
+                feature = existing["feature"]
+                description = existing["description"]
+                report_type = existing["type"]
+                if not previous_content:
+                    previous_content = existing["content"] or ""
+        except Exception as e:
+            print("DB lookup warning during regenerate:", e)
 
     if not feature:
         feature = "QA Feature"
@@ -1200,32 +1218,39 @@ def regenerate():
     new_content = regenerate_ai_content(report_type, feature, description, previous_content)
 
     # Update existing entry & set real local timestamp
-    if report_id and str(report_id).isdigit():
-        cursor.execute(
-            "UPDATE reports SET content = ?, created_at = datetime('now', 'localtime') WHERE id = ?",
-            (new_content, report_id)
-        )
-    else:
-        cursor.execute(
-            "SELECT id FROM reports WHERE type = ? AND feature = ? AND description = ? ORDER BY id DESC LIMIT 1",
-            (report_type, feature, description)
-        )
-        row = cursor.fetchone()
-        if row:
-            report_id = row[0]
+    try:
+        if report_id and str(report_id).isdigit():
             cursor.execute(
                 "UPDATE reports SET content = ?, created_at = datetime('now', 'localtime') WHERE id = ?",
                 (new_content, report_id)
             )
         else:
             cursor.execute(
-                "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
-                (report_type, feature, description, new_content)
+                "SELECT id FROM reports WHERE type = ? AND feature = ? AND description = ? ORDER BY id DESC LIMIT 1",
+                (report_type, feature, description)
             )
-            report_id = cursor.lastrowid
+            row = cursor.fetchone()
+            if row:
+                report_id = row[0]
+                cursor.execute(
+                    "UPDATE reports SET content = ?, created_at = datetime('now', 'localtime') WHERE id = ?",
+                    (new_content, report_id)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO reports (type, feature, description, content, created_at) VALUES (?, ?, ?, ?, datetime('now', 'localtime'))",
+                    (report_type, feature, description, new_content)
+                )
+                report_id = cursor.lastrowid
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    except Exception as db_err:
+        print("Database write warning on serverless environment:", db_err)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
     content_html = markdown.markdown(new_content, extensions=['tables'])
 
