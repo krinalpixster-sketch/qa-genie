@@ -1052,6 +1052,11 @@ def home():
     )
 
 
+@app.route("/testcase", methods=["GET"])
+def testcase_page():
+    return render_template("testcase.html")
+
+
 @app.route("/scenario", methods=["GET"])
 def scenario_page():
     return render_template("scenario.html")
