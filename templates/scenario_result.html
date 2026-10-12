@@ -55,6 +55,12 @@
         <a href="/scenario" class="btn btn-secondary">🎯 Generate Another Scenario</a>
     </div>
 
+    {% if not has_api_key %}
+    <div style="background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem;">
+        ℹ️ <strong>Notice:</strong> <code>GEMINI_API_KEY</code> is not configured. Serving standard template output. Add <code>GEMINI_API_KEY</code> in Vercel Environment Variables to enable live AI generation.
+    </div>
+    {% endif %}
+
     <div class="ai-result">
         {{ ai_response|safe }}
     </div>

@@ -23,9 +23,17 @@ IST = timezone(timedelta(hours=5, minutes=30))
 def get_current_timestamp():
     return datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
 
-# Load API key from GEMINI_API_KEY env variable
-api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key) if api_key else None
+# Helper to securely fetch and initialize Gemini client
+def get_gemini_client():
+    key = os.getenv("GEMINI_API_KEY")
+    if not key or not key.strip():
+        return None
+    try:
+        return genai.Client(api_key=key.strip())
+    except Exception as e:
+        # Log generic error type only, never exposing key or error details
+        print(f"Gemini client initialization warning: {type(e).__name__}")
+        return None
 
 app = Flask(__name__)
 app.secret_key = "qa_genie_secret_key"
@@ -364,6 +372,7 @@ def get_fallback_test_cases_regenerated(feature, description):
 
 
 def generate_ai_test_cases(feature, description):
+    client = get_gemini_client()
     if not client:
         return get_fallback_test_cases(feature, description)
 
@@ -388,27 +397,25 @@ def generate_ai_test_cases(feature, description):
     """
 
     try:
-        print("AI GENERATION STARTED - BATCH 1")
         resp1 = client.models.generate_content(model="gemini-3.5-flash", contents=prompt1)
         text1 = resp1.text or ""
 
-        print("AI GENERATION STARTED - BATCH 2")
         resp2 = client.models.generate_content(model="gemini-3.5-flash", contents=prompt2)
         text2 = resp2.text or ""
 
         combined_rows = parse_and_combine_markdown_tables(text1, text2)
-        print(f"AI RESPONSE RECEIVED - Total unique test cases: {len(combined_rows)}")
 
         if len(combined_rows) >= 15:
             return render_markdown_table_from_rows(combined_rows)
         else:
             return get_fallback_test_cases(feature, description)
     except Exception as e:
-        print("AI GENERATION FAILED:", e)
+        print(f"AI GENERATION WARNING: {type(e).__name__}")
         return get_fallback_test_cases(feature, description)
 
 
 def generate_ai_test_cases_regenerated(feature, description, previous_content):
+    client = get_gemini_client()
     if not client:
         return get_fallback_test_cases_regenerated(feature, description)
 
@@ -448,11 +455,9 @@ def generate_ai_test_cases_regenerated(feature, description, previous_content):
     """
 
     try:
-        print("AI REGENERATION STARTED - BATCH 1")
         resp1 = client.models.generate_content(model="gemini-3.5-flash", contents=prompt1)
         text1 = resp1.text or ""
 
-        print("AI REGENERATION STARTED - BATCH 2")
         resp2 = client.models.generate_content(model="gemini-3.5-flash", contents=prompt2)
         text2 = resp2.text or ""
 
@@ -460,7 +465,7 @@ def generate_ai_test_cases_regenerated(feature, description, previous_content):
         if len(combined_rows) >= 15:
             return render_markdown_table_from_rows(combined_rows)
     except Exception as e:
-        print("AI TEST CASE REGENERATION FAILED:", e)
+        print(f"AI TEST CASE REGENERATION WARNING: {type(e).__name__}")
 
     return get_fallback_test_cases_regenerated(feature, description)
 
@@ -612,15 +617,14 @@ def generate_ai_scenarios(feature, description):
 
     Return ONLY the Markdown table.
     """
+    client = get_gemini_client()
     if client:
         try:
-            print("AI SCENARIOS GENERATION STARTED")
             resp = client.models.generate_content(model="gemini-3.5-flash", contents=prompt)
             if resp.text:
-                print("AI SCENARIOS RESPONSE RECEIVED")
                 return normalize_markdown_table_ids(resp.text, prefix="TS")
         except Exception as e:
-            print("AI SCENARIOS FAILED:", e)
+            print(f"AI SCENARIOS WARNING: {type(e).__name__}")
 
     return get_fallback_scenarios(feature, description)
 
@@ -648,14 +652,14 @@ def generate_ai_scenarios_regenerated(feature, description, previous_content):
 
     Return ONLY the Markdown table.
     """
+    client = get_gemini_client()
     if client:
         try:
-            print("AI REGENERATION STARTED - SCENARIOS")
             resp = client.models.generate_content(model="gemini-3.5-flash", contents=prompt)
             if resp.text:
                 return normalize_markdown_table_ids(resp.text, prefix="TS")
         except Exception as e:
-            print("AI SCENARIO REGENERATION FAILED:", e)
+            print(f"AI SCENARIO REGENERATION WARNING: {type(e).__name__}")
 
     return get_fallback_scenarios_regenerated(feature, description)
 
@@ -676,15 +680,14 @@ def generate_ai_bug_report(feature, description):
     - Actual Result
     - Suggested Fix / Workaround
     """
+    client = get_gemini_client()
     if client:
         try:
-            print("AI BUG REPORT GENERATION STARTED")
             resp = client.models.generate_content(model="gemini-3.5-flash", contents=prompt)
             if resp.text:
-                print("AI BUG REPORT RESPONSE RECEIVED")
                 return resp.text
         except Exception as e:
-            print("AI BUG REPORT FAILED:", e)
+            print(f"AI BUG REPORT WARNING: {type(e).__name__}")
 
     fallback = f"""
 ### 🐛 Bug Report: Defect in {feature}
@@ -746,14 +749,14 @@ def generate_ai_bug_report_regenerated(feature, description, previous_content):
     - Actual Result
     - Suggested Fix / Workaround
     """
+    client = get_gemini_client()
     if client:
         try:
-            print("AI REGENERATION STARTED - BUG REPORT")
             resp = client.models.generate_content(model="gemini-3.5-flash", contents=prompt)
             if resp.text:
                 return resp.text
         except Exception as e:
-            print("AI BUG REPORT REGENERATION FAILED:", e)
+            print(f"AI BUG REPORT REGENERATION WARNING: {type(e).__name__}")
 
     v = random.choice([1, 2, 3])
     if v == 1:
@@ -863,15 +866,14 @@ def generate_ai_checklist(feature, description):
     Return ONLY a Markdown table with exact columns:
     | Item ID | Testing Category | Inspection Checkpoint | Priority | Verification Status |
     """
+    client = get_gemini_client()
     if client:
         try:
-            print("AI CHECKLIST GENERATION STARTED")
             resp = client.models.generate_content(model="gemini-3.5-flash", contents=prompt)
             if resp.text:
-                print("AI CHECKLIST RESPONSE RECEIVED")
                 return resp.text
         except Exception as e:
-            print("AI CHECKLIST FAILED:", e)
+            print(f"AI CHECKLIST WARNING: {type(e).__name__}")
 
     fallback = f"""
 | Item ID | Testing Category | Inspection Checkpoint | Priority | Verification Status |
@@ -905,14 +907,14 @@ def generate_ai_checklist_regenerated(feature, description, previous_content):
     Return ONLY a Markdown table with exact columns:
     | Item ID | Testing Category | Inspection Checkpoint | Priority | Verification Status |
     """
+    client = get_gemini_client()
     if client:
         try:
-            print("AI REGENERATION STARTED - CHECKLIST")
             resp = client.models.generate_content(model="gemini-3.5-flash", contents=prompt)
             if resp.text:
                 return resp.text
         except Exception as e:
-            print("AI CHECKLIST REGENERATION FAILED:", e)
+            print(f"AI CHECKLIST REGENERATION WARNING: {type(e).__name__}")
 
     v = random.choice([1, 2, 3])
     if v == 1:
@@ -1048,7 +1050,8 @@ def home():
         scenarios_count=scenarios_count,
         bugs_count=bugs_count,
         checklists_count=checklists_count,
-        recent_reports=recent_reports
+        recent_reports=recent_reports,
+        has_api_key=bool(os.getenv("GEMINI_API_KEY"))
     )
 
 
@@ -1101,7 +1104,8 @@ def generate():
         feature=feature,
         description=description,
         content=content,
-        ai_response=content_html
+        ai_response=content_html,
+        has_api_key=bool(os.getenv("GEMINI_API_KEY"))
     )
 
 
@@ -1131,7 +1135,8 @@ def generate_scenario():
         feature=feature,
         description=description,
         content=content,
-        ai_response=content_html
+        ai_response=content_html,
+        has_api_key=bool(os.getenv("GEMINI_API_KEY"))
     )
 
 
@@ -1161,7 +1166,8 @@ def generate_bug():
         feature=feature,
         description=description,
         content=content,
-        ai_response=content_html
+        ai_response=content_html,
+        has_api_key=bool(os.getenv("GEMINI_API_KEY"))
     )
 
 
@@ -1191,7 +1197,8 @@ def generate_checklist():
         feature=feature,
         description=description,
         content=content,
-        ai_response=content_html
+        ai_response=content_html,
+        has_api_key=bool(os.getenv("GEMINI_API_KEY"))
     )
 
 
@@ -1282,7 +1289,8 @@ def regenerate():
         feature=feature,
         description=description,
         content=new_content,
-        ai_response=content_html
+        ai_response=content_html,
+        has_api_key=bool(os.getenv("GEMINI_API_KEY"))
     )
 
 
